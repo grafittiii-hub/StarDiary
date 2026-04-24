@@ -1175,13 +1175,50 @@
                 inset 0 0 10px 3px var(--accent-color),
                 inset 0 0 20px 6px rgba(255, 116, 140, 0.4);
         
-        .footer-credits {
-            position: absolute; bottom: 15px; width: 100%; text-align: center;
-            font-size: 12px; color: #38404d !important; opacity: 1;
-            letter-spacing: 0.1em; z-index: 50; pointer-events: none; display: block;
-    transform: scale(0.5); /* 代表縮小到 50% */
-    transform-origin: center bottom; font-family: sans-serif;
-        }
+.footer-credits {
+    /* 1. 核心修正：使用 100% 寬度來保證絕對水平居中 */
+    position: fixed;
+    bottom: 15px;
+    left: 0;
+    width: 100%;
+    
+    /* 2. 居中設定 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    
+    /* 3. 基礎設定 */
+    margin: 0;
+    padding: 0;
+    z-index: 9999;
+    pointer-events: none;
+}
+
+.footer-credits span {
+    /* 4. 字體與顏色 */
+    font-size: 12px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #ffffff;
+    mix-blend-mode: difference; /* 自動對比色：黑背景變白字，白背景變黑字 */
+    opacity: 0.7; /* 稍微透明顯得更精緻 */
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+
+    /* 5. 縮放：在 span 上做縮放，不會影響父層容器的居中定位 */
+    display: inline-block;
+    transform: scale(0.8); 
+    transform-origin: center bottom;
+}
+
+/* 針對行動裝置微調 */
+@media (max-width: 768px) {
+    .footer-credits {
+        bottom: 10px;
+    }
+    .footer-credits span {
+        transform: scale(0.7); /* 手機上更小一點 */
+    }
+}
     </style>
 </head>
 <body class="theme-sakura" id="full-body">
@@ -1313,9 +1350,6 @@
                 <button class="glass-btn btn-save" id="save-btn" onclick="handleSave()">儲存圖片</button>
             </div>
         </div>
-        <div class="footer-credits">
-            Star Diary© 2026 Grafittiii_uru
-        </div>
     </div>
 
     <!-- History Panel -->
@@ -1335,6 +1369,7 @@
             </div>
         </div>
     </div>
+
 
     <script>
         // ===== Brand Splash Screen Controller =====
@@ -1600,7 +1635,7 @@
                 if (target.matches('button, .btn-draw, .tool-btn, .theme-dot, .ratio-btn, .date-action-btn, .history-btn')) {
                     hapticFeedback('light');
                 }
-                // 為 btn-draw 和 btn-save 添�������點擊動畫效果
+                // 為 btn-draw 和 btn-save 添加點擊動畫效果
                 if (target.matches('.btn-draw, .btn-save') || target.closest('.btn-draw, .btn-save')) {
                     const btn = target.matches('.btn-draw, .btn-save') ? target : target.closest('.btn-draw, .btn-save');
                     btn.classList.remove('clicked');
@@ -1786,12 +1821,12 @@
             { cat: "陪伴", txt: "在粉絲群裡和大家一起瘋狂刷他/她的名場面，滿屏哈哈哈的歡樂時光" },
             { cat: "陪伴", txt: "看到他/她關注了公益賬號，自己也默默點開鏈接捐了一筆小錢的默契" },
             { cat: "陪伴", txt: "把他/她的金句整理成筆記，考試前翻出來看，瞬間充滿動力的時刻" },
-            { cat: "陪伴", txt: "刷到他/她小時候的舊照，驚呼「原來___模樣從小到大都沒變」的驚喜" },
+            { cat: "陪伴", txt: "刷到他/她小時候的舊照，驚呼「原來___的模樣從小到大都沒變」的驚喜" },
             { cat: "陪伴", txt: "參加線上抽獎，沒中獎卻收到主辦方送的他/她小卡，依舊開心的瞬間" },
             { cat: "陪伴", txt: "看到他/她回覆粉絲的委屈留言，語氣溫柔又認真，覺得喜歡對了人的感動" },
             { cat: "陪伴", txt: "熬夜剪輯他/她的飯制視頻，發布後收到很多同好點讚的成就感" },
             { cat: "陪伴", txt: "在瀏覽器收藏夾建了一個「___專屬文件夾」，存滿他/她的採訪和舞台" },
-            { cat: "陪伴", txt: "看到他/她分享的歌單，一首一首聽過來，���現品味超合拍的驚喜" },
+            { cat: "陪伴", txt: "看到他/她分享的歌單，一首一首聽過來，發現品味超合拍的驚喜" },
             { cat: "陪伴", txt: "參加線上簽名會抽選，雖然沒中但看到中選粉絲的返圖，也替她開心的心情" },
             { cat: "陪伴", txt: "刷到他/她和工作人員打鬧的後台視頻，覺得他/她私下這麼可愛的瞬間" },
             { cat: "陪伴", txt: "把他/她的語音設成鬧鐘，每天早上被叫醒都覺得是幸福的開端" },
@@ -1843,7 +1878,7 @@
             { cat: "念念不忘", txt: "翻出當年買的他/她的寫真集，裡面的照片都已經看了無數遍，但依舊喜歡" },
             { cat: "念念不忘", txt: "最愛的一場他/她的舞台是___場的___，每次回放都會覺得熱血沸騰" },
             { cat: "念念不忘", txt: "珍藏著他/她的一個徽章，是自己抽獎得來的，每次看到都會覺得很幸運" },
-            { cat: "念念不忘", txt: "翻出當年和同好一起做的他/���的應援手幅，雖然有點舊，但依舊滿是回憶" },
+            { cat: "念念不忘", txt: "翻出當年和同好一起做的他/她的應援手幅，雖然有點舊，但依舊滿是回憶" },
             { cat: "念念不忘", txt: "最愛的一句他/她的話，是___，每次遇到困難都會想起這句話" },
             { cat: "念念不忘", txt: "珍藏著他/她的一個周邊掛件，掛在書包上，陪自己度過了很多難熬的日子" },
             { cat: "念念不忘", txt: "翻出當年買的他/她的電影票根，雖然已經褪色，但依舊是珍貴的回憶" },
@@ -1857,7 +1892,7 @@
             { cat: "同好", txt: "和同擔一起做應援視頻，分工合作，最終成品獲得很多點讚的成就感" },
             { cat: "同好", txt: "認識的一個同好，專程從外地寄來他/她的雜誌，收到包裹時滿是感動" },
             { cat: "同好", txt: "和同好一起線上參加他/她的生日應援，一起熬夜準備禮物的熱血" },
-            { cat: "同���", txt: "認識的一個同擔，和自己一樣最愛他/她的___造型，每次聊起來都很投緣" },
+            { cat: "同好", txt: "認識的一個同擔，和自己一樣最愛他/她的___造型，每次聊起來都很投緣" },
             { cat: "同好", txt: "和同好一起去看他/她的電影，結束後在電影院門口討論劇情的快樂" },
             { cat: "同好", txt: "在粉絲見面會上認識了一個同好，幫忙拍照，留下了很多好看的照片" },
             { cat: "同好", txt: "和同擔一起整理他/她的資料，做成電子書分享給大家的成就感" },
@@ -1889,7 +1924,7 @@
             { cat: "活動", txt: "演唱會結束後，撿到一張他/她的應援手幅，小心翼翼收藏起來的珍惜" },
             { cat: "活動", txt: "參加他/她的見面會，和同好一起合照，留下了珍貴的回憶" },
             { cat: "活動", txt: "在簽售會上，看到他/她認真簽名的樣子，覺得喜歡對了人的感動" },
-            { cat: "活動", txt: "參加他/她的路演活動，收到他/她的親筆簽名明信片，���是驚喜的時刻" },
+            { cat: "活動", txt: "參加他/她的路演活動，收到他/她的親筆簽名明信片的那些驚喜的時刻" },
             { cat: "活動", txt: "演唱會現場，聽到他/她說「謝謝你們一直都在」，眼淚忍不住掉下來" },
             { cat: "活動", txt: "參加他/她的粉絲見面會，和同好一起分享應援物，滿是溫暖的時刻" },
             { cat: "活動", txt: "在簽售會上，和他/她合照，照片裡的自己笑得特別燦爛的瞬間" },
@@ -1927,7 +1962,7 @@
             { cat: "線上", txt: "聽著他/她的歌背單詞，效率變高的同時，覺得學習也變得快樂" },
             { cat: "線上", txt: "收藏他/她的同款清單" },
             { cat: "線上", txt: "刷到他/她和粉絲的可愛互動影片，反覆看了十幾遍" },
-            { cat: "線上", txt: "把他/她的���勵語收藏在__裡，每次見到都能獲得動力" },
+            { cat: "線上", txt: "把他/她的鼓勵話語收藏在__裡，每次見到都能獲得動力" },
             { cat: "線上", txt: "在線上被他/她回覆了" },
             { cat: "線上", txt: "練習/學會他/她的舞蹈動作" },
             { cat: "線上", txt: "分享他/她的隱藏花絮，被大家驚歎細節控的自豪" },
@@ -2033,7 +2068,7 @@
             { cat: "快樂的形狀", txt: "入手一本他/她的綜藝寫真，裡面有很多可愛的瞬間，超級喜歡" },
             { cat: "快樂的形狀", txt: "買了他/她的周邊書籤，夾在書本裡，每次翻書都能看到" },
             { cat: "快樂的形狀", txt: "入手一張他/她的公益明信片，支持他/她的公益事業，很有意義" },
-            { cat: "快樂的形狀", txt: "買了他/她代���的飲料，參加抽獎活動，中了小禮品的興奮" },
+            { cat: "快樂的形狀", txt: "買了他/她代言的飲料，參加抽獎活動，中了小禮品的興奮" },
             { cat: "快樂的形狀", txt: "線上購票後，等待抽選結果的緊張感" },
             { cat: "快樂的形狀", txt: "買了他/她的周邊手帳本，用來寫追星手帳，很開心" },
             { cat: "快樂的形狀", txt: "看他/她的電影後收藏票根，紀念這次觀影" },
@@ -2048,7 +2083,7 @@
             { cat: "快樂的形狀", txt: "買了他/她代言的飲料，和親友一起分享" },
             { cat: "快樂的形狀", txt: "帶著他/她的娃出去被人問起的自豪" },
             { cat: "快樂的形狀", txt: "買了他/她的化妝品Top spender，感覺很自己很有錢" },
-            { cat: "快樂的形狀", txt: "買了他/她宣傳的糖���，收集小卡很快樂" },
+            { cat: "快樂的形狀", txt: "買了他/她宣傳的零食，收集小卡很快樂" },
             { cat: "快樂的形狀", txt: "最喜歡和他/她的哪張合照？" },
             { cat: "快樂的形狀", txt: "最喜愛的Hi-bye是？" }
         ];
@@ -2595,7 +2630,7 @@
              ctx.restore();
          }
         
-        // 繪製向日葵（���層花瓣 + 籽粒紋理 + 自然曲線 + 金色光暈）
+        // 繪製向日葵（花瓣 + 籽粒紋理 + 自然曲線 + 金色光暈）
         function drawSunflower(ctx, x, y, size, petalColor, centerColor, withGlow = true) {
             ctx.save();
             ctx.translate(x,y);
@@ -2958,7 +2993,7 @@
                         ctx.lineTo(tipX, tipY);
                         ctx.stroke();
 
-                        // ���層光暈
+                        // 內層光暈
                         ctx.lineWidth = stickWidth + 8;
                         ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${glow * 0.35})`;
                         ctx.beginPath();
@@ -3212,7 +3247,7 @@
                         const size = Math.random() * 6 + 3;
                         const opacity = Math.random() * 0.4 + 0.3;
 
-                        // 露���外層光暈
+                        // 露   外層光暈
                         const dewGlow = ctx.createRadialGradient(x, y, 0, x, y, size * 2.5);
                         dewGlow.addColorStop(0, `rgba(255, 255, 255, ${opacity * 0.8})`);
                         dewGlow.addColorStop(0.4, `rgba(200, 255, 220, ${opacity * 0.4})`);
@@ -3433,7 +3468,22 @@
 
                 // 5. 下載圖片
                 const link = document.createElement('a');
-                link.download = `StarDiary_${Date.now()}.png`;
+                // 取得當下時間
+const now = new Date();
+
+// 提取並格式化日期 (padStart 確保月份和日期都是兩位數，例如 4月變成 04)
+const year = now.getFullYear();
+const month = String(now.getMonth() + 1).padStart(2, '0'); // 月份是從 0 開始的，所以要 +1
+const day = String(now.getDate()).padStart(2, '0');
+const hours = String(now.getHours()).padStart(2, '0');
+const minutes = String(now.getMinutes()).padStart(2, '0');
+
+// 組合出乾淨的西曆日期字串，例如 "20260425_1430"
+const formattedDate = `${year}${month}${day}_${hours}${minutes}`;
+
+// 設定下載檔名
+link.download = `StarDiary_${formattedDate}.png`;
+
                 link.href = canvas.toDataURL('image/png');
                 document.body.appendChild(link);
                 link.click();
@@ -4196,7 +4246,7 @@
                 }
             });
 
-            // 初始化金色花粉粒子（極細小金沙���
+            // 初始化金色花粉粒子（極細小金沙
              const pollenCount = isMobile ? 40 : 70;
              for (let i = 0; i < pollenCount; i++) {
                  goldenPollenParticles.push({
@@ -4674,7 +4724,7 @@
             }
         }
 
-        // 星���粒子系統
+        // 星河粒子系統
         let starParticles = [];
         function initStarParticles() {
             starParticles = [];
@@ -4709,7 +4759,7 @@
                     angle: angle
                 });
             }
-            // ���亮星
+            // 明亮星
             for (let i = 0; i < 20; i++) {
                 starParticles.push({
                     x: Math.random() * w * 1.5,
@@ -5048,7 +5098,7 @@
 
                 for (let i = 0; i < actualSticksInRow; i++) {
                     const color = lightstickColors[Math.floor(Math.random() * lightstickColors.length)];
-                    // 根據距離調整大小和亮���（頂部遠=暗，底部近=亮）
+                    // 根據距離調整大小和亮度（頂部遠=暗，底部近=亮）
                     const depthFactor = 0.6 + (row / (rowCount - 1)) * 0.4; // 頂部0.6，底部1.0
                     stageLightsticks.push({
                         x: rowOffset + (i / actualSticksInRow) * w + (Math.random() - 0.5) * 10,
@@ -5283,5 +5333,10 @@ document.onkeydown = (e) => {
         
 console.log("%c停！別看我的原始碼，去寫日記吧！", "color: blue; font-size: 30px; font-weight: bold;");
     </script>
+<div style="position: fixed !important; bottom: 15px !important; left: 0 !important; width: 100vw !important; pointer-events: none !important; z-index: 2147483647 !important; display: flex !important; justify-content: center !important; align-items: center !important; margin: 0 !important; padding: 0 !important;">
+    <span style="font-size: 12px !important; color: #ffffff !important; mix-blend-mode: difference !important; opacity: 0.6 !important; transform: scale(0.7) !important; transform-origin: center center !important; white-space: nowrap !important; letter-spacing: 0.05em !important;">
+        Star Diary© 2026 Grafittiii_uru
+    </span>
+</div>
 </body>
 </html>
