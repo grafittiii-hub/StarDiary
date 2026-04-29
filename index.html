@@ -451,7 +451,6 @@
 }
 
 
-
         /* 底部控制 */
         .control-panel { width: 100%; max-width: 400px; display: flex; flex-direction: column; gap: 15px; margin-top: 20px; flex-shrink: 0; padding-bottom: 20px; }
         .theme-selector { display: flex; justify-content: center; gap: 10px; }
@@ -1343,7 +1342,10 @@
                             </div>
                         </div>
                     </div>
-                    <div style="font-size: 11px; font-weight: 700; opacity: 0.8; text-align: right; line-height: 1.2;">
+                    <div id="overflow-warning" style="display: none; color: #ff4d4f; font-size: 10px; text-align: center;font-weight: 400;">
+    注意 文字長度可能超出版面
+</div>
+                    <div style="font-size: 11px; font-weight: 700; opacity: 0.8; text-align: right; align-items: center; line-height: 1.2;">
                         StarDiary<br><span style="font-size: 9px; font-weight: 400;">by Grafittiii</span>
                     </div>
                 </div>
@@ -1642,6 +1644,32 @@
             const hasDraft = loadDraft();
             if (hasDraft && storage) {
                 console.log('已恢復上次的草稿');
+// 1. 當使用者在編輯器打字時，即時試算
+const answerEditorEl = document.getElementById('answer-editor');
+if (answerEditorEl) {
+    answerEditorEl.addEventListener('input', checkCanvasOverflow);
+}
+
+// 2. 當切換字體時，因為字體寬度不同，重新試算
+const fontSelector = document.querySelector('.font-select');
+if (fontSelector) {
+    fontSelector.addEventListener('change', checkCanvasOverflow);
+}
+
+// 3. 找到你切換比例的按鈕，綁定試算
+// 假設你有 onClick="setRatio(...)" 的按鈕，我們覆蓋或增強該邏輯
+const originalSetRatio = window.setRatio;
+window.setRatio = function(r) {
+    if (originalSetRatio) originalSetRatio(r); // 執行你原本的比例切換
+    setTimeout(checkCanvasOverflow, 50);      // 延遲一點點等 DOM 切換完再算
+};
+
+// 4. 抽題時因為問題長度改變，也要試算
+const originalDrawPrompt = window.drawPrompt;
+window.drawPrompt = function() {
+    if (originalDrawPrompt) originalDrawPrompt(); // 執行原本的抽題
+    setTimeout(checkCanvasOverflow, 50);
+};
             }
 
             // 按鈕點擊回饋
@@ -2092,16 +2120,16 @@
             { cat: "快樂的形狀", txt: "看他/她的電影後收藏票根，紀念這次觀影" },
             { cat: "快樂的形狀", txt: "買了他/她代言的產品，中選成為lucky fans" },
             { cat: "快樂的形狀", txt: "入手一本有他/她的本地雜誌，超級難得" },
-            { cat: "快樂的形狀", txt: "買了他/她的周邊牆貼，讓房間變得更溫馨" },
+            { cat: "快樂的形狀", txt: "把他/她的周邊放在哪裡？" },
             { cat: "快樂的形狀", txt: "收藏他/她演唱會灑下的紙片" },
             { cat: "快樂的形狀", txt: "簽售獲得手寫字" },
             { cat: "快樂的形狀", txt: "多收了一張他/她的福利券" },
             { cat: "快樂的形狀", txt: "買了隨機卡周邊，交換到喜歡的款式" },
             { cat: "快樂的形狀", txt: "收了早期的周邊，__真的很值得收藏！" },
-            { cat: "快樂的形狀", txt: "買了他/她代言的飲料，和親友一起分享" },
+            { cat: "快樂的形狀", txt: "他/她代言的飲料" },
             { cat: "快樂的形狀", txt: "帶著他/她的娃出去被人問起的自豪" },
             { cat: "快樂的形狀", txt: "買了他/她的化妝品Top spender，感覺很自己很有錢" },
-            { cat: "快樂的形狀", txt: "買了他/她宣傳的零食，收集小卡很快樂" },
+            { cat: "快樂的形狀", txt: "最記得他/她宣傳的哪款零食？" },
             { cat: "快樂的形狀", txt: "最喜歡和他/她的哪張合照？" },
             { cat: "快樂的形狀", txt: "最喜愛的Hi-bye是？" }
         ];
@@ -2774,6 +2802,91 @@
         
         }
 
+// --- 請將此函數貼在 function handleSave() 的正上方 ---
+function drawRichText(ctx, elementId, startX, startY, maxWidth, lineHeight, baseFont) {
+    const editor = document.getElementById(elementId);
+    let currentX = startX;
+    let currentY = startY + lineHeight;
+    let isNewLine = true;
+
+    function drawSegment(text, bold, italic, underline, isBreak) {
+        // 處理換行
+        if (isBreak) {
+            if (!isNewLine) {
+                currentX = startX;
+                currentY += lineHeight;
+                isNewLine = true;
+            }
+            return;
+        }
+
+        // 設定 B/I 格式字體
+        let weight = bold ? "bold" : "normal";
+        let style = italic ? "italic" : "normal";
+        ctx.font = `${style} ${weight} 42px "${baseFont}", sans-serif`;
+        
+        // 逐字繪製以精準控制換行與底線
+        for (let i = 0; i < text.length; i++) {
+            const char = text[i];
+            
+            // 略過 HTML 原始碼中的隱藏換行符
+            if (char === '\n') continue; 
+            
+            const charWidth = ctx.measureText(char).width;
+
+            // 自動換行計算
+            if (currentX + charWidth > startX + maxWidth) {
+                currentX = startX;
+                currentY += lineHeight;
+                isNewLine = true;
+            }
+
+            ctx.fillText(char, currentX, currentY);
+            
+            // 繪製底線 (U)
+            if (underline) {
+                ctx.fillRect(currentX, currentY + 6, charWidth, 3);
+            }
+            
+            currentX += charWidth;
+            isNewLine = false;
+        }
+    }
+
+    // 遞迴解析 HTML 節點 (抓取 B/I/U)
+    function traverse(node, b, i, u) {
+        if (node.nodeType === Node.TEXT_NODE) {
+            drawSegment(node.textContent, b, i, u, false);
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+            const tag = node.tagName.toLowerCase();
+            const isBlock = tag === 'div' || tag === 'p';
+            
+            if (tag === 'br') {
+                drawSegment('', b, i, u, true); 
+                return;
+            }
+            if (isBlock && !isNewLine) {
+                drawSegment('', b, i, u, true);
+            }
+
+            // 判斷是否帶有格式標籤
+            const newB = b || tag === 'b' || tag === 'strong';
+            const newI = i || tag === 'i' || tag === 'em';
+            const newU = u || tag === 'u';
+
+            node.childNodes.forEach(child => traverse(child, newB, newI, newU));
+            
+            if (isBlock && !isNewLine) {
+                drawSegment('', b, i, u, true);
+            }
+        }
+    }
+
+    ctx.fillStyle = '#111'; // 確保字體顏色正確
+    traverse(editor, false, false, false);
+    return currentY;
+}
+
         // 核心儲存邏輯 - 純 Canvas 繪製
         function handleSave() {
             if (!isDrawn) { showAlert("請先抽取題目！"); return; }
@@ -2809,16 +2922,16 @@
                     rainbowGradient.addColorStop(0.4, '#ffecd2');
                     rainbowGradient.addColorStop(0.6, '#a1c4fd');
                     rainbowGradient.addColorStop(0.8, '#c2e9fb');
-                    rainbowGradient.addColorStop(1, '#d4fc79');
+                    rainbowGradient.addColorStop(1, '#c2fbe4');
                     ctx.fillStyle = rainbowGradient;
                     ctx.fillRect(0, 0, outputWidth, outputHeight);
                     // 添加流動光帶效果
                     const waveColors = [
-                        'rgba(255, 154, 158, 0.25)',
-                        'rgba(250, 208, 196, 0.25)',
-                        'rgba(255, 236, 210, 0.25)',
-                        'rgba(161, 196, 253, 0.25)',
-                        'rgba(194, 233, 251, 0.25)'
+                        'rgba(255, 154, 158, 0.3)',
+                        'rgba(250, 208, 196, 0.3)',
+                        'rgba(255, 236, 210, 0.3)',
+                        'rgba(161, 196, 253, 0.3)',
+                        'rgba(194, 251, 228, 0.3)'
                     ];
                     for (let i = 0; i < 5; i++) {
                         const yBase = (outputHeight * 0.15) + (i * outputHeight * 0.18);
@@ -2839,10 +2952,10 @@
                         const x = Math.random() * outputWidth;
                         const y = Math.random() * outputHeight;
                         const size = Math.random() * 8 + 4;
-                        const opacity = Math.random() * 0.3 + 0.1;
+                        const opacity = 0.5 + Math.sin(rainbowOffset + i * 0.5) * 0.3;
                         const gradient = ctx.createRadialGradient(x, y, 0, x, y, size * 3);
                         gradient.addColorStop(0, `rgba(255, 255, 255, ${opacity})`);
-                        gradient.addColorStop(1, 'transparent');
+                        gradient.addColorStop(1, `rgba(255, 255, 255, 0)`);
                         ctx.fillStyle = gradient;
                         ctx.beginPath();
                         ctx.arc(x, y, size * 3, 0, Math.PI * 2);
@@ -3465,15 +3578,9 @@
                 }
                 currentY += 50;
 
-                // 答案文字
-                ctx.font = `normal 42px "${currentFont}", sans-serif`;
-                ctx.fillStyle = '#111';
-                const answerLines = wrapText(ctx, answerText, contentWidth);
-                const lineHeight = 75;
-                for (const line of answerLines) {
-                    currentY += lineHeight;
-                    ctx.fillText(line, contentX, currentY);
-                }
+                // 答案文字 (支援 B/I/U 格式解析)
+const lineHeight = 75;
+currentY = drawRichText(ctx, 'answer-editor', contentX, currentY, contentWidth, lineHeight, currentFont);
 
                 // 4. 底部信息
                 const bottomY = cardY + cardHeight - cardPadding;
@@ -4003,7 +4110,7 @@ link.download = `StarDiary_${formattedDate}.png`;
                 'rgba(255, 236, 210, 0.3)',
                 'rgba(161, 196, 253, 0.3)',
                 'rgba(194, 233, 251, 0.3)',
-                'rgba(212, 252, 121, 0.3)'
+                'rgba(194, 251, 228, 0.3)'
             ];
 
             // 繪製多條流動的光帶
@@ -4034,15 +4141,15 @@ link.download = `StarDiary_${formattedDate}.png`;
             }
 
             // 添加流動光點
-            for (let i = 0; i < 20; i++) {
+            for (let i = 0; i < 17; i++) {
                 const x = ((rainbowOffset * 50 + i * 80) % (w + 100)) - 50;
                 const y = (h * 0.2) + (i % 5) * (h * 0.18) + Math.sin(rainbowOffset + i) * 30;
                 const size = 3 + Math.sin(rainbowOffset * 2 + i) * 2;
-                const opacity = 0.3 + Math.sin(rainbowOffset + i * 0.5) * 0.2;
+                const opacity = 0.4 + Math.sin(rainbowOffset + i * 0.5) * 0.3;
 
                 const gradient = bgCtx.createRadialGradient(x, y, 0, x, y, size * 3);
                 gradient.addColorStop(0, `rgba(255, 255, 255, ${opacity})`);
-                gradient.addColorStop(1, 'transparent');
+                gradient.addColorStop(1, `rgba(255, 255, 255, 0)`);
                 bgCtx.fillStyle = gradient;
                 bgCtx.beginPath();
                 bgCtx.arc(x, y, size * 3, 0, Math.PI * 2);
@@ -5399,6 +5506,78 @@ link.download = `StarDiary_${formattedDate}.png`;
             }
         });
 
+// --- 1. 定義偵測函數 ---
+function checkCanvasOverflow() {
+    const captureArea = document.getElementById('capture-area');
+    const editor = document.getElementById('answer-editor');
+    const warningEl = document.getElementById('overflow-warning');
+    if (!captureArea || !editor) return;
+
+    const isSquare = captureArea.classList.contains('ratio-square');
+    
+    // 取得當前選中的字體
+    const fontSelect = document.querySelector('.font-select');
+    const currentFont = fontSelect ? fontSelect.value.replace(/'/g, '') : 'LXGW WenKai TC';
+
+    // 畫布參數 (對齊你的儲存邏輯)
+    const outputWidth = 1080;
+    const outputHeight = isSquare ? 1080 : 1920;
+    const cardWidth = outputWidth * 0.85;
+    const cardHeight = isSquare ? cardWidth : cardWidth * (16/9);
+    const cardX = (outputWidth - cardWidth) / 2;
+    const cardY = (outputHeight - cardHeight) / 2;
+    const cardPadding = 60;
+    const contentWidth = cardWidth - cardPadding * 2;
+    const contentX = cardX + cardPadding;
+
+    // 建立臨時畫布進行試算
+    const offscreenCanvas = document.createElement('canvas');
+    offscreenCanvas.width = outputWidth;
+    offscreenCanvas.height = outputHeight;
+    const ctx = offscreenCanvas.getContext('2d');
+
+    // 模擬計算路徑
+    let currentY = cardY + cardPadding + 50; // 初始 Y + 標籤空間
+
+    // 模擬問題高度
+    ctx.font = `bold 48px "${currentFont}", sans-serif`;
+    const question = document.getElementById('question-text').innerText;
+    const questionLines = wrapText(ctx, question, contentWidth);
+    currentY += (questionLines.length * 60) + 50;
+
+    // 模擬答案高度
+    const lineHeight = 75;
+    const finalY = drawRichText(ctx, 'answer-editor', contentX, currentY, contentWidth, lineHeight, currentFont);
+
+    // 安全界線：底部留白 80px 給 Footer
+    const safeLimitY = (cardY + cardHeight - cardPadding) - 80;
+
+    // UI 顯示切換
+    if (warningEl) {
+        if (finalY > safeLimitY) {
+            warningEl.style.display = 'block';
+            editor.style.boxShadow = 'inset 0 -3px 0 0 rgba(255, 77, 79, 0.4)';
+        } else {
+            warningEl.style.display = 'none';
+            editor.style.boxShadow = 'none';
+        }
+    }
+}
+
+// --- 2. 綁定監聽器 (確保在 DOM 加載後執行) ---
+// 這裡要把監聽邏輯包在現有的初始化流程中，或放在最後
+const editorEl = document.getElementById('answer-editor');
+if (editorEl) {
+    editorEl.addEventListener('input', checkCanvasOverflow);
+}
+
+// 監聽字體切換
+const fontSelector = document.querySelector('.font-select');
+if (fontSelector) {
+    fontSelector.addEventListener('change', checkCanvasOverflow);
+}
+
+
 // 阻止右鍵選單
 document.oncontextmenu = () => false;
 
@@ -5410,8 +5589,8 @@ document.onkeydown = (e) => {
     }
 };
         
-console.log("%c停！別看我的原始碼，去寫日記吧！", "color: blue; font-size: 30px; font-weight: bold;");
-    </script>
+console.log("%c停！別看我的原始碼，去寫日記吧！", "color: blue; font-size: 20px; font-weight: bold;");
+</script>
 <div style="position: fixed !important; bottom: 15px !important; left: 0 !important; width: 100vw !important; pointer-events: none !important; z-index: 2147483647 !important; display: flex !important; justify-content: center !important; align-items: center !important; margin: 0 !important; padding: 0 !important;">
     <span style="font-size: 12px !important; color: #ffffff !important; mix-blend-mode: difference !important; opacity: 0.6 !important; transform: scale(0.7) !important; transform-origin: center center !important; white-space: nowrap !important; letter-spacing: 0.05em !important;">
         Star Diary© 2026 Grafittiii_uru
