@@ -1,0 +1,16 @@
+{
+  "name": "stardiary",
+  "version": "1.0.0",
+  "description": "StarDiary by Grafittiii - A beautiful diary application",
+  "scripts": {
+    "dev": "npx serve .",
+    "build": "echo 'Static site - no build needed'",
+    "lint": "echo 'No linter configured'"
+  },
+  "keywords": ["diary", "stardiary"],
+  "author": "Grafittiii",
+  "license": "ISC",
+  "dependencies": {
+    "@vercel/analytics": "^1.1.1"
+  }
+}
